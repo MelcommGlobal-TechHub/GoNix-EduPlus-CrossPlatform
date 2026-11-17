@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  color-scheme: dark;
+  --bg: #09090b;
+  --surface: #111113;
+  --surface-raised: #18181b;
+  --border: #27272a;
+  --text: #fafafa;
+  --muted: #a1a1aa;
+  --subtle: #71717a;
+  --blue: #3b82f6;
+  --violet: #8b5cf6;
+  --green: #22c55e;
+  --mono: 'DM Mono', ui-monospace, monospace;
+  --topbar: rgba(9, 9, 11, 0.9);
+  --panel: rgba(17, 17, 19, 0.94);
+  --input: #09090b;
+  --soft: rgba(59, 130, 246, 0.09);
+  --soft-text: #a1b9d9;
+}
+
+:root[data-theme='ice'] {
+  color-scheme: light;
+  --bg: #f3f8ff; --surface: #ffffff; --surface-raised: #eaf2ff;
+  --border: #d7e3f2; --text: #152238; --muted: #52647d; --subtle: #718198;
+  --blue: #2563eb; --violet: #7c3aed; --topbar: rgba(255,255,255,.9);
+  --panel: rgba(255,255,255,.96); --input: #f8fbff; --soft: #eaf2ff; --soft-text: #31527c;
+}
+:root[data-theme='midnight'] {
+  color-scheme: dark;
+  --bg: #071426; --surface: #0d2038; --surface-raised: #132b49;
+  --border: #24415f; --text: #edf6ff; --muted: #a5bfd8; --subtle: #7897b5;
+  --blue: #38bdf8; --violet: #818cf8; --topbar: rgba(7,20,38,.92);
+  --panel: rgba(13,32,56,.96); --input: #08182c; --soft: rgba(56,189,248,.12); --soft-text: #b5ddf7;
+}
+:root[data-theme='aurora'] {
+  color-scheme: dark;
+  --bg: #111027; --surface: #1a1838; --surface-raised: #25214a;
+  --border: #39345f; --text: #f7f4ff; --muted: #c0b8df; --subtle: #958bbd;
+  --blue: #8b9cff; --violet: #c084fc; --topbar: rgba(17,16,39,.92);
+  --panel: rgba(26,24,56,.96); --input: #15132f; --soft: rgba(192,132,252,.12); --soft-text: #d8c7ff;
+}
+:root[data-theme='warm'] {
+  color-scheme: light;
+  --bg: #f7f1e7; --surface: #fffaf1; --surface-raised: #f1e6d5;
+  --border: #dfd0bb; --text: #342b22; --muted: #6d5d4c; --subtle: #8a7866;
+  --blue: #276678; --violet: #8b5e83; --topbar: rgba(255,250,241,.92);
+  --panel: rgba(255,250,241,.97); --input: #fffdf8; --soft: #e8f0ed; --soft-text: #315b60;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme='system'] {
+    color-scheme: light;
+    --bg: #f3f8ff; --surface: #ffffff; --surface-raised: #eaf2ff;
+    --border: #d7e3f2; --text: #152238; --muted: #52647d; --subtle: #718198;
+    --blue: #2563eb; --violet: #7c3aed; --topbar: rgba(255,255,255,.9);
+    --panel: rgba(255,255,255,.96); --input: #f8fbff; --soft: #eaf2ff; --soft-text: #31527c;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] {
+    color-scheme: dark;
+    --bg: #09090b; --surface: #111113; --surface-raised: #18181b;
+    --border: #27272a; --text: #fafafa; --muted: #a1a1aa; --subtle: #71717a;
+    --blue: #3b82f6; --violet: #8b5cf6; --topbar: rgba(9,9,11,.9);
+    --panel: rgba(17,17,19,.94); --input: #09090b; --soft: rgba(59,130,246,.09); --soft-text: #a1b9d9;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% -30%, color-mix(in srgb, var(--blue) 10%, transparent), transparent 55%),
+    var(--bg);
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+::selection {
+  color: #fff;
+  background: rgba(59, 130, 246, 0.45);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+code,
+pre,
+.mono {
+  font-family: var(--mono);
+}
+
+::placeholder {
+  color: #71717a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

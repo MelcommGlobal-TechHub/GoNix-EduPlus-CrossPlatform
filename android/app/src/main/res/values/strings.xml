@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GoNix EduPlus</string>
+    <string name="title_activity_main">GoNix EduPlus</string>
+    <string name="package_name">com.melcommglobal.gonixeduplus</string>
+    <string name="custom_url_scheme">com.melcommglobal.gonixeduplus</string>
+</resources>
