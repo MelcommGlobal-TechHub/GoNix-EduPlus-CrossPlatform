@@ -19,6 +19,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Restore Firebase Android configuration
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::Missing GOOGLE_SERVICES_JSON secret."
+            exit 1
+          fi
+
+          mkdir -p android/app
+          printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+
+          python3 - <<'PYJSON'
+          import json
+          from pathlib import Path
+
+          config = json.loads(Path("android/app/google-services.json").read_text())
+          project = config.get("project_info", {}).get("project_id")
+          clients = config.get("client", [])
+          package = "com.melcommglobal.gonixeduplus"
+
+          matches = [
+              item for item in clients
+              if item.get("client_info", {}).get("android_client_info", {}).get("package_name") == package
+          ]
+
+          if project != "gonix-hybrid-ai" or not matches:
+              raise SystemExit("Firebase Android configuration does not match this app.")
+
+          print("Firebase Android configuration restored and verified.")
+          PYJSON
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -29,7 +61,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
