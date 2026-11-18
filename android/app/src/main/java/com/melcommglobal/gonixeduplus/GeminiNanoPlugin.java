@@ -94,10 +94,14 @@ public class GeminiNanoPlugin extends Plugin {
                     }
 
                     try {
+                        final long[] downloadTotalBytes = {0};
+
                         ListenableFuture<Void> downloadFuture =
                             model.download(new DownloadCallback() {
                                 @Override
                                 public void onDownloadStarted(long totalBytes) {
+                                    downloadTotalBytes[0] = totalBytes;
+
                                     JSObject event = new JSObject();
                                     event.put("phase", "started");
                                     event.put("totalBytes", totalBytes);
@@ -108,6 +112,7 @@ public class GeminiNanoPlugin extends Plugin {
                                 public void onDownloadProgress(long downloadedBytes) {
                                     JSObject event = new JSObject();
                                     event.put("phase", "downloading");
+                                    event.put("totalBytes", downloadTotalBytes[0]);
                                     event.put("downloadedBytes", downloadedBytes);
                                     notifyListeners("downloadProgress", event);
                                 }

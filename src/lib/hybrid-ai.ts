@@ -6,6 +6,8 @@ import {
   type InferenceSource as InferenceSourceType,
 } from 'firebase/ai'
 import { appCheckConfigured, getFirebaseAI } from './firebase'
+import { Capacitor } from '@capacitor/core'
+import { GeminiNano } from './native-gemini-nano'
 
 export type HybridMode =
   | 'PREFER_ON_DEVICE'
@@ -25,6 +27,8 @@ export interface DeviceStatus {
   secureContext: boolean
   supported: boolean
   explanation: string
+  platform?: string
+  nativeStatus?: string
 }
 
 export interface StreamCallbacks {
@@ -80,9 +84,97 @@ export function getDeviceStatus(): DeviceStatus {
   }
 }
 
+export async function getHybridDeviceStatus(): Promise<DeviceStatus> {
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+    try {
+      const result = await GeminiNano.getStatus()
+      const supported =
+        result.status === 'AVAILABLE' || result.status === 'DOWNLOADABLE'
+
+      return {
+        apiDetected: true,
+        secureContext: true,
+        supported,
+        platform: 'Android',
+        nativeStatus: result.status,
+        explanation:
+          result.status === 'AVAILABLE'
+            ? 'Gemini Nano is available for on-device inference.'
+            : result.status === 'DOWNLOADABLE'
+              ? 'Gemini Nano is supported and can be downloaded.'
+              : result.status === 'DOWNLOADING'
+                ? 'Gemini Nano is currently downloading.'
+                : 'Gemini Nano is unavailable on this device.',
+      }
+    } catch (error) {
+      return {
+        apiDetected: true,
+        secureContext: true,
+        supported: false,
+        platform: 'Android',
+        nativeStatus: 'ERROR',
+        explanation: error instanceof Error
+          ? error.message
+          : 'Could not check native Gemini Nano availability.',
+      }
+    }
+  }
+
+  return {
+    ...getDeviceStatus(),
+    platform: Capacitor.isNativePlatform()
+      ? Capacitor.getPlatform()
+      : 'Web',
+  }
+}
+
 export async function prepareDeviceModel(
   onProgress?: (progress: number) => void,
 ): Promise<void> {
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+    const status = await GeminiNano.getStatus()
+
+    if (status.status === 'AVAILABLE') {
+      onProgress?.(1)
+      return
+    }
+
+    if (status.status !== 'DOWNLOADABLE') {
+      throw new Error(
+        `Gemini Nano cannot be downloaded. Current status: ${status.status}`,
+      )
+    }
+
+    let totalBytes = 0
+    const listener = await GeminiNano.addListener(
+      'downloadProgress',
+      (event) => {
+        if (event.phase === 'started') {
+          totalBytes = event.totalBytes ?? 0
+        } else if (
+          event.phase === 'downloading' &&
+          totalBytes > 0 &&
+          event.downloadedBytes !== undefined
+        ) {
+          onProgress?.(
+            Math.min(1, event.downloadedBytes / totalBytes),
+          )
+        } else if (event.phase === 'completed') {
+          onProgress?.(1)
+        }
+      },
+    )
+
+    try {
+      await GeminiNano.downloadModel()
+      onProgress?.(1)
+    } finally {
+      await listener.remove()
+    }
+
+    return
+  }
+
   const status = getDeviceStatus()
 
   if (!status.supported) {
@@ -128,6 +220,54 @@ export async function runHybridInference(
     mode === 'PREFER_ON_DEVICE' && !cloudConsent
       ? InferenceMode.ONLY_ON_DEVICE
       : MODE_MAP[mode]
+
+  const isAndroidNative =
+    Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
+
+  if (isAndroidNative) {
+    if (mode === 'PREFER_IN_CLOUD' || mode === 'ONLY_IN_CLOUD') {
+      throw new Error(
+        'Android cloud inference is not enabled until native Play Integrity App Check is integrated and verified. Your prompt was not sent to the cloud.',
+      )
+    }
+
+    let nativeStatus
+
+    try {
+      nativeStatus = await GeminiNano.getStatus()
+    } catch (error) {
+      throw new Error(
+        `Could not verify Gemini Nano availability: ${
+          error instanceof Error ? error.message : String(error)
+        }. No cloud request was made.`,
+      )
+    }
+
+    if (nativeStatus.status === 'AVAILABLE') {
+      const result = await GeminiNano.generate({ prompt: cleanPrompt })
+
+      if (result.source !== 'ON_DEVICE' || !result.text.trim()) {
+        throw new Error('Native Gemini Nano returned an invalid response.')
+      }
+
+      callbacks.onText?.(result.text)
+
+      return {
+        text: result.text,
+        source: InferenceSource.ON_DEVICE,
+        mode,
+        effectiveMode: InferenceMode.ONLY_ON_DEVICE,
+      }
+    }
+
+    throw new Error(
+      `Gemini Nano is not ready (${nativeStatus.status}). ${
+        mode === 'ONLY_ON_DEVICE' || !cloudConsent
+          ? 'Cloud fallback is disabled. Your prompt was not sent to the cloud.'
+          : 'Android cloud fallback remains blocked until native App Check is verified. Your prompt was not sent to the cloud.'
+      }`,
+    )
+  }
 
   if (effectiveMode === InferenceMode.ONLY_ON_DEVICE) {
     const status = getDeviceStatus()
