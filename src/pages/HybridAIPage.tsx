@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useAISettings, type ThemeId } from '../context/AISettingsContext'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  getDeviceStatus,
+  getHybridDeviceStatus,
   prepareDeviceModel,
   runHybridInference,
 } from '../lib/hybrid-ai'
@@ -11,6 +11,7 @@ import { generateVisualResult } from '../lib/outputs/visual-generator'
 import { downloadTextResult, downloadVisualResult } from '../lib/outputs/downloads'
 import VisualRenderer from '../lib/outputs/VisualRenderer'
 import type { VisualResult, VisualType } from '../lib/outputs/types'
+import type { DeviceStatus } from '../lib/hybrid-ai'
 import '../App.css'
 
 
@@ -30,9 +31,25 @@ function HybridAIPage() {
   const [preparing, setPreparing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
+  const [device, setDevice] = useState<DeviceStatus>({
+    apiDetected: false,
+    secureContext: false,
+    supported: false,
+    platform: 'Checking',
+    explanation: 'Checking native device capabilities...',
+  })
 
+  useEffect(() => {
+    let active = true
+    getHybridDeviceStatus().then((status) => {
+      if (active) setDevice(status)
+    })
+    return () => { active = false }
+  }, [])
 
-  const device = useMemo(() => getDeviceStatus(), [])
+  async function refreshDeviceStatus() {
+    setDevice(await getHybridDeviceStatus())
+  }
 
   async function handlePrepareDevice() {
     setPreparing(true)
@@ -47,6 +64,7 @@ function HybridAIPage() {
       setError(err instanceof Error ? err.message : 'Device preparation failed.')
     } finally {
       setPreparing(false)
+      await refreshDeviceStatus()
     }
   }
 
@@ -189,12 +207,14 @@ function HybridAIPage() {
           </article>
 
           <article className="status-card">
-            <div className="status-heading">ON-DEVICE API</div>
+            <div className="status-heading">ON-DEVICE ENGINE</div>
             <div className="status-value">
-              <span className={device.supported ? 'status-indicator good' : 'status-indicator'} />
-              {device.supported ? 'Detected' : 'Not detected'}
+              <span className={device.nativeStatus === 'AVAILABLE' || device.nativeStatus === 'DOWNLOADABLE' || (device.platform !== 'Android' && device.supported) ? 'status-indicator good' : 'status-indicator'} />
+              {device.platform === 'Android'
+                ? (device.nativeStatus ?? 'Checking')
+                : device.supported ? 'Detected' : 'Not detected'}
             </div>
-            <p>Browser LanguageModel capability</p>
+            <p>{device.platform === 'Android' ? 'Native Gemini Nano · Android' : `${device.platform ?? 'Web'} · Browser LanguageModel`}</p>
           </article>
 
           <article className="status-card">
@@ -417,16 +437,20 @@ function HybridAIPage() {
               </div>
 
               <div className="device-check">
-                <span>LanguageModel API</span>
-                <strong>{device.apiDetected ? 'Detected' : 'Unavailable'}</strong>
+                <span>{device.platform === 'Android' ? 'Gemini Nano status' : 'LanguageModel API'}</span>
+                <strong>{device.platform === 'Android' ? (device.nativeStatus ?? 'Checking') : device.apiDetected ? 'Detected' : 'Unavailable'}</strong>
               </div>
               <div className="device-check">
                 <span>Secure context</span>
                 <strong>{device.secureContext ? 'Yes' : 'No'}</strong>
               </div>
               <div className="device-check">
+                <span>Runtime platform</span>
+                <strong>{device.platform ?? 'Unknown'}</strong>
+              </div>
+              <div className="device-check">
                 <span>Local inference</span>
-                <strong>{device.supported ? 'Potentially supported' : 'Not ready'}</strong>
+                <strong>{device.nativeStatus === 'AVAILABLE' ? 'Ready' : device.nativeStatus === 'DOWNLOADABLE' ? 'Download required' : device.supported ? 'Potentially supported' : 'Not ready'}</strong>
               </div>
 
               <p className="device-explanation">{device.explanation}</p>
@@ -466,7 +490,7 @@ function HybridAIPage() {
                 <div className="flow-line" />
                 <div className="flow-node">
                   <span>03A</span>
-                  <div><strong>On-device AI</strong><small>Browser model</small></div>
+                  <div><strong>On-device AI</strong><small>{device.platform === 'Android' ? 'Native Gemini Nano' : 'Browser model'}</small></div>
                 </div>
                 <div className="flow-or">OR</div>
                 <div className="flow-node">

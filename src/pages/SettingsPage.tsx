@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  getDeviceStatus,
+  getHybridDeviceStatus,
   prepareDeviceModel,
   type HybridMode,
 } from '../lib/hybrid-ai'
 import { useAISettings, themeOptions } from '../context/AISettingsContext'
 import type { VisualType } from '../lib/outputs/types'
+import type { DeviceStatus } from '../lib/hybrid-ai'
 
 const modes: { id: HybridMode; name: string; description: string }[] = [
   {
@@ -48,22 +49,41 @@ export default function SettingsPage() {
     theme, setTheme, resetSettings,
   } = useAISettings()
 
-  const device = useMemo(() => getDeviceStatus(), [])
+  const [device, setDevice] = useState<DeviceStatus>({
+    apiDetected: false,
+    secureContext: false,
+    supported: false,
+    platform: 'Checking',
+    explanation: 'Checking native device capabilities...',
+  })
   const [preparing, setPreparing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    let active = true
+    getHybridDeviceStatus().then((status) => {
+      if (active) setDevice(status)
+    })
+    return () => { active = false }
+  }, [])
+
+  async function refreshDeviceStatus() {
+    setDevice(await getHybridDeviceStatus())
+  }
 
   async function handlePrepare() {
     setPreparing(true)
     setMessage('')
     setProgress(0)
     try {
-      await prepareDeviceModel((value) => setProgress(value))
+      await prepareDeviceModel((value) => setProgress(Math.round(value * 100)))
       setMessage('The device model preparation request completed.')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Model preparation failed.')
     } finally {
       setPreparing(false)
+      await refreshDeviceStatus()
     }
   }
 
@@ -166,7 +186,8 @@ export default function SettingsPage() {
       <section className="edu-settings-section">
         <h2>On-device AI readiness</h2>
         <div className="edu-settings-status">
-          <p><strong>Language model API:</strong> {device.apiDetected ? 'Detected' : 'Not detected'}</p>
+          <p><strong>Runtime platform:</strong> {device.platform ?? 'Unknown'}</p>
+          <p><strong>{device.platform === 'Android' ? 'Gemini Nano status' : 'Language model API'}:</strong> {device.platform === 'Android' ? (device.nativeStatus ?? 'Checking') : device.apiDetected ? 'Detected' : 'Not detected'}</p>
           <p><strong>Secure context:</strong> {device.secureContext ? 'Available' : 'Unavailable'}</p>
           <p><strong>Device support:</strong> {device.supported ? 'Potentially supported' : 'Not currently supported'}</p>
           <p className="edu-muted">{device.explanation}</p>
