@@ -32,7 +32,6 @@ public class GeminiNanoPlugin extends Plugin {
                 @Override
                 public void onSuccess(Integer status) {
                     JSObject result = new JSObject();
-
                     String availability;
 
                     if (status == FeatureStatus.AVAILABLE) {
@@ -52,10 +51,14 @@ public class GeminiNanoPlugin extends Plugin {
 
                 @Override
                 public void onFailure(@NonNull Throwable error) {
+                    Exception cause = error instanceof Exception
+                        ? (Exception) error
+                        : new Exception(error);
+
                     call.reject(
                         "Gemini Nano status check failed: " +
                         error.getMessage(),
-                        error
+                        cause
                     );
                 }
             }, ContextCompat.getMainExecutor(getContext()));
