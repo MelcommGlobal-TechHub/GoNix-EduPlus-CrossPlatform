@@ -39,7 +39,7 @@ dependencies {
 
     // Native App Check: debug provider for development, Play Integrity for production
     debugImplementation "com.google.firebase:firebase-appcheck-debug:20.1.0"
-    implementation "com.google.firebase:firebase-appcheck-playintegrity:20.1.0"
+    releaseImplementation "com.google.firebase:firebase-appcheck-playintegrity:20.1.0"
 
     // Java interoperability required by Firebase AI Logic APIs
     implementation "com.google.guava:guava:31.0.1-android"
