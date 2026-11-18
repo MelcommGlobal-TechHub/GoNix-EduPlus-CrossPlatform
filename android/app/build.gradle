@@ -32,6 +32,7 @@ repositories {
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
     // Firebase AI Logic hybrid inference
     implementation "com.google.firebase:firebase-ai:18.2.0"
     implementation "com.google.firebase:firebase-ai-ondevice:16.0.0-beta08"
