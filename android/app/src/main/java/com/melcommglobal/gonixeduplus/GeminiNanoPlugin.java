@@ -210,7 +210,7 @@ public class GeminiNanoPlugin extends Plugin {
                                 public void onSuccess(
                                     GenerateContentResponse response
                                 ) {
-                                    String text = response.getText();
+                                    String text = response.getCandidates().isEmpty() ? "" : response.getCandidates().get(0).getText();
 
                                     if (text == null || text.trim().isEmpty()) {
                                         call.reject(
