@@ -2,7 +2,7 @@ package com.melcommglobal.gonixeduplus
 
 import com.google.firebase.FirebaseApp
 import com.google.firebase.ai.FirebaseAI
-import com.google.firebase.ai.GenerativeBackend
+import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.InferenceMode
 import com.google.firebase.ai.OnDeviceConfig
