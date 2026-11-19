@@ -7,7 +7,10 @@ import {
 } from 'firebase/ai'
 import { appCheckConfigured, getFirebaseAI } from './firebase'
 import { Capacitor } from '@capacitor/core'
-import { GeminiNano } from './native-gemini-nano'
+import {
+  GeminiNano,
+  DEFAULT_GEMINI_NANO_MODEL,
+} from './native-gemini-nano'
 
 export type HybridMode =
   | 'PREFER_ON_DEVICE'
@@ -87,7 +90,7 @@ export function getDeviceStatus(): DeviceStatus {
 export async function getHybridDeviceStatus(): Promise<DeviceStatus> {
   if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
     try {
-      const result = await GeminiNano.getStatus()
+      const result = await GeminiNano.getStatus({ modelChoice: DEFAULT_GEMINI_NANO_MODEL })
       const supported =
         result.status === 'AVAILABLE' || result.status === 'DOWNLOADABLE'
 
@@ -132,7 +135,7 @@ export async function prepareDeviceModel(
   onProgress?: (progress: number) => void,
 ): Promise<void> {
   if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
-    const status = await GeminiNano.getStatus()
+    const status = await GeminiNano.getStatus({ modelChoice: DEFAULT_GEMINI_NANO_MODEL })
 
     if (status.status === 'AVAILABLE') {
       onProgress?.(1)
@@ -166,7 +169,7 @@ export async function prepareDeviceModel(
     )
 
     try {
-      await GeminiNano.downloadModel()
+      await GeminiNano.downloadModel({ modelChoice: DEFAULT_GEMINI_NANO_MODEL })
       onProgress?.(1)
     } finally {
       await listener.remove()
@@ -234,7 +237,7 @@ export async function runHybridInference(
     let nativeStatus
 
     try {
-      nativeStatus = await GeminiNano.getStatus()
+      nativeStatus = await GeminiNano.getStatus({ modelChoice: DEFAULT_GEMINI_NANO_MODEL })
     } catch (error) {
       throw new Error(
         `Could not verify Gemini Nano availability: ${
@@ -244,7 +247,10 @@ export async function runHybridInference(
     }
 
     if (nativeStatus.status === 'AVAILABLE') {
-      const result = await GeminiNano.generate({ prompt: cleanPrompt })
+      const result = await GeminiNano.generate({
+        prompt: cleanPrompt,
+        modelChoice: DEFAULT_GEMINI_NANO_MODEL,
+      })
 
       if (result.source !== 'ON_DEVICE' || !result.text.trim()) {
         throw new Error('Native Gemini Nano returned an invalid response.')
