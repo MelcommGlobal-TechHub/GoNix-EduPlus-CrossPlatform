@@ -4,12 +4,14 @@ apply plugin: 'org.jetbrains.kotlin.android'
 android {
     namespace = "com.melcommglobal.gonixeduplus"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures { buildConfig true }
     defaultConfig {
         applicationId "com.melcommglobal.gonixeduplus"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "ANDROID_RECAPTCHA_ENTERPRISE_SITE_KEY", "\"${System.getenv('ANDROID_RECAPTCHA_ENTERPRISE_SITE_KEY') ?: ''}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -37,9 +39,8 @@ dependencies {
     implementation "com.google.firebase:firebase-ai:18.2.0"
     implementation "com.google.firebase:firebase-ai-ondevice:16.0.0-beta08"
 
-    // Native App Check: debug provider for development, Play Integrity for production
-    debugImplementation "com.google.firebase:firebase-appcheck-debug:20.1.0"
-    releaseImplementation "com.google.firebase:firebase-appcheck-playintegrity:20.1.0"
+    // Native Android App Check: Firebase reCAPTCHA Enterprise provider
+    implementation "com.google.firebase:firebase-appcheck-recaptcha:20.1.0"
 
     // Java interoperability required by Firebase AI Logic APIs
     implementation "com.google.guava:guava:31.0.1-android"

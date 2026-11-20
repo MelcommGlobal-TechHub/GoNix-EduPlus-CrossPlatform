@@ -256,13 +256,16 @@ export default function CustomerCare() {
         onClick={() => setOpen((value) => !value)}
         aria-label={open ? 'Close GoNix Customer Care' : 'Open GoNix Customer Care'}
         aria-expanded={open}
+        title={open ? 'Close GoNix AI Customer Care' : 'GoNix AI Customer Care'}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           {open
             ? <path d="m6 6 12 12M18 6 6 18" />
-            : <><path d="M4 13v-2a8 8 0 0 1 16 0v2" /><path d="M4 13h3v6H6a2 2 0 0 1-2-2v-4Zm16 0h-3v6h1a2 2 0 0 0 2-2v-4Z" /><path d="M17 19a5 5 0 0 1-5 2" /></>}
+            : <>
+                <path d="M12 3.2 14.1 9l5.7 2.1-5.7 2.1L12 19l-2.1-5.8-5.7-2.1L9.9 9 12 3.2Z" />
+                <path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z" />
+              </>}
         </svg>
-        <span>{open ? 'Close' : 'Customer Care'}</span>
       </button>
     </div>
   )
