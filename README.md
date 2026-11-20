@@ -1,363 +1,302 @@
-# GoNix EduPlus — Hybrid AI Learning & Productivity Platform
+# GoNix EduPlus
+
+## Hybrid AI for Learning — Local Intelligence. Cloud Power. One AI Experience.
 
 **Learn More. Become More.**
 
-GoNix EduPlus is an AI-powered learning and productivity platform built around a hybrid inference architecture. It is designed to use on-device artificial intelligence whenever the user's device and browser support it, while enabling cloud-based intelligence through Firebase AI Logic when additional capability is needed and the user has explicitly permitted cloud access.
+GoNix EduPlus is an AI-powered learning and productivity platform built around a hybrid inference architecture. It combines supported on-device AI with Firebase AI Logic cloud inference, allowing the application to adapt to device capabilities and user preferences.
 
-**Core principle: Local Intelligence. Cloud Power. One AI Experience.**
+Our goal is to make AI-assisted learning more accessible while treating privacy, user choice and responsible inference as core engineering requirements.
 
 ---
 
-## 1. Project Overview
+## 1. The Challenge
 
-GoNix EduPlus brings together AI-assisted learning, educational productivity, student and lecturer tools, and intelligent platform assistance.
+Learners increasingly rely on AI to understand difficult topics, study, summarise information and improve productivity. However, cloud-only AI experiences can create barriers:
 
-Its defining innovation is its hybrid AI architecture:
+- Continuous connectivity may be unavailable, unreliable or expensive.
+- Remote inference can introduce additional latency.
+- Devices have different AI capabilities.
+- Users need meaningful control over whether their prompts are sent to cloud services.
 
-- On-device inference for supported devices and browsers.
-- Firebase AI Logic for cloud inference.
-- User-controlled cloud consent.
-- Inference-mode selection.
-- App Check integration for cloud AI access.
-- A shared AI settings system across the application.
+GoNix EduPlus addresses these challenges with a hybrid architecture that supports local inference where available and consent-controlled cloud inference when appropriate.
 
-Rather than assuming every user has a powerful device or a reliable internet connection, GoNix EduPlus is designed to adapt its inference strategy to available capabilities and user preferences.
+## 2. Our Solution
 
-## 2. Challenge Alignment
+GoNix EduPlus brings together three AI execution capabilities.
 
-The project addresses the central challenge of building an AI application that can operate on-device when possible and use cloud inference when necessary through Firebase AI Logic.
+### Chrome On-Device AI
 
-| Challenge requirement | GoNix EduPlus approach |
+On supported Chrome environments, the web application detects the browser's on-device Language Model API and can use Firebase AI Logic's on-device inference path.
+
+Availability depends on browser version, device capability, secure-context requirements and model availability. Detecting the API does not by itself guarantee that a model is ready to run.
+
+### Native Android On-Device AI
+
+The Android application includes a native Capacitor plugin that integrates Firebase AI Logic's on-device model capabilities.
+
+The native integration exposes these model choices:
+
+| Model choice | Firebase AI Logic option |
 |---|---|
-| On-device AI | Uses the browser's supported on-device Language Model API |
-| Cloud AI | Integrates Firebase AI Logic |
-| Hybrid inference | Shared inference engine supports local and cloud strategies |
-| Intelligent fallback | Inference mode and device capability determine the available execution path |
-| User control | Cloud inference requires explicit user consent |
-| Web application | React and TypeScript web application |
-| Significant application upgrade | Adds a hybrid AI experience to the GoNix EduPlus learning platform |
-| Responsible AI integration | App Check, inference-source verification and privacy-aware execution |
+| Gemini Nano 4 Full Preview | `OnDeviceModelOption.PREVIEW` |
+| Gemini Nano 4 Fast Preview | `OnDeviceModelOption.PREVIEW_FAST` |
+| Stable option | `OnDeviceModelOption.STABLE` |
 
-The current deliverable is the web application. Native Android and iOS applications are potential future delivery targets, not claims of completed native releases.
+The default selection is Gemini Nano 4 Full Preview. The plugin supports model status checks, model download handling with progress events, and on-device generation. It verifies that the returned inference source is `ON_DEVICE`.
 
-## 3. What Makes GoNix Hybrid AI Different?
+Model availability is device- and software-dependent. The presence of the native integration does not mean Gemini Nano is available on every Android device.
 
-### On-device intelligence
+### Firebase AI Logic Cloud Inference
 
-When supported, AI tasks can run locally through the browser's on-device Language Model API.
+For cloud inference, the application is configured to use **`gemini-3.5-flash-lite`** through Firebase AI Logic.
 
-Benefits include:
-- Reduced dependence on remote AI services.
-- Better privacy for supported local inference.
-- Potentially lower network latency.
-- Access to AI capabilities in environments with limited connectivity, subject to device and model availability.
+This is the cloud model, distinct from the Gemini Nano 4 on-device model options. Cloud execution requires network connectivity, valid Firebase configuration, App Check configuration and the user's explicit cloud permission.
 
-### Firebase AI Logic cloud inference
+## 3. Hybrid Inference Modes
 
-When local inference is unavailable or unsuitable, the application can use Firebase AI Logic for cloud-based AI processing.
+The shared inference engine supports four strategies:
 
-Cloud execution is governed by the user's selected inference strategy and explicit cloud-consent preference.
+| Mode | Behaviour |
+|---|---|
+| `PREFER_ON_DEVICE` | Prioritises on-device inference. Cloud use is subject to explicit consent and platform safeguards. |
+| `PREFER_IN_CLOUD` | Prioritises cloud inference and requires cloud consent. |
+| `ONLY_ON_DEVICE` | Uses local inference only; cloud fallback is prohibited. |
+| `ONLY_IN_CLOUD` | Uses cloud inference only and requires cloud consent. |
 
-The application does not silently grant cloud consent merely because a user selects a cloud-oriented mode.
+The engine checks the execution environment, local model capability, selected mode and consent state. It validates the reported inference source before accepting a response.
 
-### Four inference strategies
+On Android, cloud inference is deliberately blocked in the current implementation until native App Check integration is fully verified. If Gemini Nano is unavailable, the application reports the limitation rather than silently sending the prompt to the cloud.
 
-The shared hybrid AI engine supports:
+## 4. Architecture
 
-- `PREFER_ON_DEVICE` — prioritize local inference.
-- `PREFER_IN_CLOUD` — prioritize cloud inference when consent is granted.
-- `ONLY_ON_DEVICE` — never use cloud fallback.
-- `ONLY_IN_CLOUD` — require cloud consent and use the cloud path.
+```text
+                     GoNix EduPlus
+                           |
+                       AI Request
+                           |
+                  Shared Hybrid Engine
+                           |
+                  Read AI Preferences
+                           |
+                Detect Execution Platform
+                           |
+                +----------+----------+
+                |                     |
+              Chrome                Android
+                |                     |
+       Browser LanguageModel   Native Firebase AI
+            API / AI Logic       Logic integration
+                |                     |
+          On-device AI           Gemini Nano 4
+                |                     |
+                +----------+----------+
+                           |
+                  Verify inference source
+                           |
+                    Return response
 
-The engine checks the execution environment, enforces consent requirements, streams supported responses, verifies the inference source and handles transient failures.
+       Consent-controlled cloud path (where enabled):
+                           |
+                   Firebase AI Logic
+                           |
+                 gemini-3.5-flash-lite
+```
 
-## 4. Platform Features
+## 5. Educational Experience
 
-### GoNix Hybrid AI
-The central AI experience for interacting with the hybrid inference engine.
+GoNix EduPlus is designed for students, teachers, lecturers and lifelong learners. The application brings AI assistance into an education-focused environment with learning and productivity areas such as:
 
-### GoNix AI Agent
-A conversational assistant that reuses the same hybrid inference engine and shared AI settings.
+- Learning dashboard, courses and curriculum.
+- Student Studio and Lecturer Studio.
+- Assessments, certificates and learning progress.
+- AI-assisted learning and platform assistance.
+- Community, messaging, notifications and user settings.
 
-### GoNix Customer Care
-An integrated support experience with:
-- AI-powered platform assistance.
-- Chat interface.
-- Voice input and speech output where browser capabilities permit.
-- Frequently asked questions.
-- Feedback form interface.
+The platform's wider ambition is to make practical AI tools more accessible to learners, including people working with limited connectivity or a broad range of device capabilities.
 
-The current feedback experience is a local preview; server-side feedback submission is not yet connected.
+Some wider platform areas may use demonstration or session-local data. Their presence in the interface should not be interpreted as proof that every feature has a production backend.
 
-### Learning and education
-The application includes learning-oriented areas such as:
-- Learning dashboard.
-- Courses and curriculum.
-- Student Studio.
-- Lecturer Studio.
-- Assessments.
-- Certificates.
-- Learning progress.
+## 6. Privacy and Security
 
-### Community and productivity
-Additional application areas include:
-- Community.
-- Messages.
-- Notifications.
-- Opportunities.
-- User profile and settings.
+Privacy-aware execution is built into the inference flow:
 
-Some of these areas currently use demonstration or session-local data. Their presence in the interface does not imply that every feature has a production backend.
+- Cloud consent is explicit and defaults to disabled.
+- Choosing a cloud-oriented mode does not silently grant consent.
+- Local-only mode cannot fall back to cloud inference.
+- Cloud requests are gated by Firebase App Check configuration.
+- The application checks the inference source reported by Firebase AI Logic.
+- Prompt length is validated.
+- Transient cloud failures use bounded retry handling.
+- Firebase configuration is supplied through environment variables.
 
-## 5. Technology Stack
+**Verification status:** App Check initialization is integrated into the web and Android configurations. Runtime token acquisition and enforcement must be verified before App Check enforcement is enabled. Android cloud inference remains blocked pending native App Check verification.
+
+On-device inference depends on supported hardware, operating-system and browser capabilities, and model availability. Cloud inference requires connectivity and correctly configured Firebase services.
+
+## 7. Technology Stack
 
 | Technology | Purpose |
 |---|---|
 | React 19 | User interface |
-| TypeScript 5.9 | Type safety |
-| Vite 8 | Development and production build |
-| Firebase AI Logic | Cloud AI inference |
-| Firebase App Check | Application attestation for supported cloud requests |
-| Browser Language Model API | Supported on-device inference |
+| TypeScript 5.9 | Application logic and type safety |
+| Vite 8 | Development and production builds |
+| Capacitor 8 | Native Android integration |
+| Kotlin and Java | Native Android implementation |
+| Firebase AI Logic | On-device and cloud AI integration |
+| Gemini Nano 4 | Supported on-device AI model options |
+| Gemini 3.5 Flash Lite | Cloud inference model |
+| Firebase App Check | Application attestation |
 | Firebase Hosting | Web application hosting |
-| Local Storage | Local user preferences and selected interface state |
+| jsPDF and DOCX tooling | Document export capabilities |
+| Recharts | Data visualisation |
 
-## 6. Hybrid AI Architecture
+## 8. Current Implementation Status
 
-```text
-                  GoNix EduPlus
-                        |
-                 User AI Request
-                        |
-                Hybrid AI Engine
-                        |
-             Read Shared AI Settings
-                        |
-              Check Device Support
-                        |
-             +----------+----------+
-             |                     |
-       Local Available       Local Unavailable
-             |                     |
-      On-device Model       Check Cloud Consent
-             |                     |
-      Local Inference        +------+------+
-             |               |             |
-             |            Granted       Not Granted
-             |               |             |
-             |        Firebase AI Logic  No Cloud
-             |               |           Execution
-             +---------------+
-                     |
-              Verify AI Source
-                     |
-               Return Response
-```
+The following table distinguishes code present in the repository from capabilities that still require runtime verification.
 
-The actual execution path depends on the selected inference mode, browser capabilities, consent state and service availability.
+| Capability | Implementation status |
+|---|---|
+| React and TypeScript application | Implemented |
+| Shared hybrid inference engine | Implemented |
+| Four inference modes | Implemented |
+| Chrome on-device API detection | Implemented; model execution requires compatible-browser testing |
+| Firebase AI Logic cloud integration | Implemented; live inference requires runtime verification |
+| Explicit cloud-consent controls | Implemented |
+| Streaming cloud responses | Implemented |
+| Inference-source validation in web inference path | Implemented |
+| Native Android Gemini Nano plugin | Implemented |
+| Android model status and download handling | Implemented |
+| Android on-device generation | Implemented; compatible-device testing required |
+| Web and Android App Check configuration | Integrated; runtime verification required |
+| Android cloud fallback | Blocked pending native App Check verification |
+| Production authentication and persistent platform services | Further implementation and verification required |
 
-## 7. Privacy and Security
+A device may report Gemini Nano as unavailable even when the native integration is installed correctly. The application must communicate that state honestly.
 
-GoNix EduPlus follows a privacy-aware hybrid AI design.
+## 9. Live Application and Repository
 
-- Cloud consent defaults to disabled.
-- Selecting a cloud-oriented inference mode does not automatically grant consent.
-- Local-only inference does not use cloud fallback.
-- Cloud AI requests require the configured App Check protection.
-- Inference source is checked before the response is accepted.
-- Firebase configuration is supplied through environment variables.
-- Private credentials and service-account keys must never be committed to the repository.
+**Web application:** https://gonix-eduplus.web.app
 
-On-device inference availability depends on browser support, device capability and model availability. Cloud inference requires connectivity and valid Firebase configuration.
+**Source code:** https://github.com/MelcommGlobal-TechHub/GoNix-EduPlus-CrossPlatform
 
-## 8. Project Structure
+**Firebase project:** `gonix-hybrid-ai`
 
-```text
-GoNix-Hybrid-AI/
-├── public/
-├── src/
-│   ├── components/
-│   │   └── CustomerCare.tsx
-│   ├── context/
-│   │   └── AISettingsContext.tsx
-│   ├── layouts/
-│   ├── lib/
-│   │   ├── firebase.ts
-│   │   └── hybrid-ai.ts
-│   ├── pages/
-│   ├── App.tsx
-│   └── main.tsx
-├── .env.example
-├── .gitignore
-├── firebase.json
-├── index.html
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
+The EduPlus web application uses its dedicated Firebase Hosting site. The separate GoNix Hybrid AI Hosting deployment is maintained independently.
 
-## 9. Getting Started
+## 10. Run Locally
 
 ### Requirements
 
 - Node.js 24 recommended.
 - npm.
-- A Firebase project.
+- A Firebase project and registered web application.
 - A supported browser for on-device inference testing.
+- Android SDK and Java/Kotlin toolchain for native Android development.
 
-### Install dependencies
+### Install Dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
-### Configure environment variables
+### Configure Firebase
 
-Create `.env.local` in the project root.
+Create a `.env.local` file in the project root:
 
 ```env
 VITE_FIREBASE_API_KEY=your_firebase_web_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_APP_ID=your_firebase_web_app_id
-VITE_RECAPTCHA_ENTERPRISE_SITE_KEY=your_recaptcha_enterprise_site_key
+VITE_FIREBASE_APP_ID=your_web_app_id
+VITE_RECAPTCHA_ENTERPRISE_SITE_KEY=your_web_recaptcha_site_key
 ```
 
-Use the Firebase configuration belonging to your own registered web application.
+Use the configuration belonging to the intended Firebase web app. Do not commit `.env.local`, service-account credentials or private secrets.
 
-Do not commit `.env.local` or private credentials.
-
-### Run the development server
+### Start the Development Server
 
 ```bash
-npm run dev -- --host 0.0.0.0
+npm run dev
 ```
 
-### Build for production
+### Build the Web Application
 
 ```bash
 npm run build
 ```
 
-### Preview the production build
+### Preview the Production Build
 
 ```bash
-npm run preview -- --host 0.0.0.0
+npm run preview
 ```
 
-## 10. Firebase Hosting Deployment
+### Build Android
 
-The project is configured for Firebase Hosting with the production build output in `dist`.
-
-Authenticate:
+The Android build requires the registered Firebase Android configuration and the Android App Check build configuration.
 
 ```bash
-firebase login
+npx cap sync android
+cd android
+./gradlew assembleDebug
 ```
 
-Select the project:
+## 11. Project Structure
 
-```bash
-firebase use gonix-hybrid-ai
+```text
+.
+├── .github/workflows/       # Android build workflow
+├── android/                 # Capacitor Android project and native Kotlin code
+├── public/                  # Static assets
+├── src/
+│   ├── components/          # Application components
+│   ├── context/             # Shared AI and application settings
+│   ├── layouts/              # Application layouts
+│   ├── lib/
+│   │   ├── firebase.ts      # Firebase initialization
+│   │   ├── hybrid-ai.ts     # Shared hybrid inference engine
+│   │   └── native-gemini-nano.ts
+│   ├── pages/               # Application pages
+│   ├── App.tsx
+│   └── main.tsx
+├── .env.example
+├── package.json
+├── firebase.json
+└── vite.config.ts
 ```
 
-Build:
+## 12. Development Roadmap
 
-```bash
-npm run build
-```
+### Hybrid AI Validation
 
-Deploy the frontend:
+- Verify Chrome on-device inference on supported devices.
+- Verify Gemini Nano 4 Full Preview and Fast Preview on compatible Android hardware.
+- Validate Firebase AI Logic cloud inference.
+- Complete native Android App Check verification.
+- Test consent, source verification and failure handling.
 
-```bash
-firebase deploy --only hosting
-```
+### Learning and Productivity
 
-### Current deployment
+- Continue improving AI-assisted learning workflows.
+- Expand educational productivity tools.
+- Improve learner progress and persistent platform services.
+- Continue device compatibility, accessibility and performance testing.
 
-Firebase Hosting:
+## 13. Why GoNix EduPlus?
 
-https://gonix-hybrid-ai.web.app
+GoNix EduPlus explores a practical direction for educational AI: **the future should not be cloud-only.**
 
-Firebase project:
+By combining on-device Gemini Nano capabilities with Firebase AI Logic cloud inference, the platform is designed to adapt to device capability, connectivity and user consent.
 
-`gonix-hybrid-ai`
-
-## 11. Current Implementation Status
-
-### Implemented in the current web application
-
-- React and TypeScript application.
-- Firebase project configuration.
-- Firebase AI Logic integration.
-- Hybrid AI inference engine.
-- On-device inference capability checks.
-- Cloud-consent enforcement.
-- Inference strategy settings.
-- Shared AI settings context.
-- AI Agent using the shared hybrid engine.
-- Customer Care interface with chat, voice, FAQs and feedback preview.
-- Responsive application interface.
-- Firebase Hosting deployment.
-
-### Requires further implementation or verification
-
-- Native Android and iOS application packaging.
-- Production authentication and user identity flows.
-- Persistent Firestore-backed messaging.
-- Production push notification delivery.
-- Server-side feedback submission and support ticket handling.
-- Persistent community and notification data.
-- Full cross-device synchronization.
-- Broader device and browser compatibility testing.
-- Automated security, performance and accessibility testing.
-
-These items are future implementation or verification work, not represented as completed capabilities.
-
-## 12. Testing and Evaluation
-
-The project should be evaluated against the following criteria:
-
-1. Verify local inference on a browser and device that support the required API.
-2. Verify that unsupported local inference does not silently trigger cloud execution without consent.
-3. Verify cloud inference through Firebase AI Logic after explicit consent.
-4. Verify that local-only mode never uses the cloud.
-5. Verify cloud access and App Check configuration.
-6. Confirm the reported inference source matches the actual execution path.
-7. Test network interruption and transient failures.
-8. Test responsive behaviour on mobile and desktop.
-9. Verify that the application does not expose private credentials.
-10. Test the deployed application independently of the development environment.
-
-## 13. Roadmap
-
-### Phase 1 — Hybrid AI foundation
-Completed foundation: shared inference engine, device capability checks, Firebase AI Logic integration and cloud-consent controls.
-
-### Phase 2 — AI learning and assistance
-Continue improving AI-assisted learning, conversational assistance, learning workflows and platform support.
-
-### Phase 3 — Visual AI and productivity
-Expand visual result generation, structured diagrams, charts, mind maps, flowcharts and export capabilities as they are implemented and tested.
-
-### Phase 4 — Persistent platform services
-Connect authentication, Firestore-backed data, messaging, notifications and support workflows.
-
-### Phase 5 — Cross-platform expansion
-Evaluate Android and iOS delivery, platform-specific inference capabilities and native integration.
-
-## 14. Vision
-
-GoNix EduPlus aims to make intelligent learning and productivity more accessible by combining local AI capabilities with cloud intelligence under user control.
-
-Its goal is not simply to add a chatbot to an education platform. It is to build an adaptable AI environment that can choose an appropriate execution path based on device capability, user preference and available services.
+It brings this architecture into an education-focused product with a clear ambition: help more learners access intelligent learning and productivity tools while making responsible AI behaviour part of the engineering design.
 
 **GoNix EduPlus — Learn More. Become More.**
 
-**GoNix Hybrid AI — Local Intelligence. Cloud Power. One AI Experience.**
+**Local Intelligence. Cloud Power. One AI Experience.**
 
 ---
 
 ## License
 
-Add the project's chosen open-source or proprietary license before public distribution. Until a license is added, no reuse rights should be assumed.
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
