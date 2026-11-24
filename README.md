@@ -277,7 +277,7 @@ firebase deploy --only hosting
 
 Firebase Hosting:
 
-https://gonix-hybrid-ai.web.app
+https://gonix-eduplus.web.app
 
 Firebase project:
 
